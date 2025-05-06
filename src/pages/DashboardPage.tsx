@@ -12,12 +12,12 @@ const DashboardPage: React.FC = () => {
     <Layout>
       <div className="mb-8 text-center">
         <div className="bg-white rounded-xl px-10 py-3 shadow-md inline-block">
-          <h1 className="text-3xl font-bold text-[#003366]">C<span className="text-yellow-400">♦</span>LING</h1>
+          <h1 className="text-3xl font-bold text-[#003366]">C<span className="text-yellow-400"><Lightbulb className='inline w-10 h-10'/></span>LING</h1>
           <p className="text-xs text-gray-600">Controlling light</p>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-6 mt-16">
+      <div className="grid grid-cols-2 gap-6 mt-16 ">
         <Card 
           className="card-icon flex flex-col items-center justify-center py-8 cursor-pointer hover:shadow-lg transition-shadow"
           onClick={() => navigate('/control-light')}
