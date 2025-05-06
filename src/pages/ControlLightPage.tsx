@@ -1,22 +1,90 @@
 
 import React, { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
-import { Lightbulb, LightbulbOff } from 'lucide-react';
+import { Lightbulb, LightbulbOff, RefreshCcw } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
+import { Button } from '@/components/ui/button';
+
+interface LightDevice {
+  id: string;
+  name: string;
+  isConnected: boolean;
+  isOn: boolean;
+}
 
 const ControlLightPage: React.FC = () => {
   const [isOn, setIsOn] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [isConnecting, setIsConnecting] = useState(false);
+  const [lightDevices, setLightDevices] = useState<LightDevice[]>([]);
+  const [selectedDevice, setSelectedDevice] = useState<string | null>(null);
   const { toast } = useToast();
 
+  // Simulate fetching available light devices
+  useEffect(() => {
+    // In a real implementation, this would be an API call to your home automation system
+    const fetchDevices = () => {
+      const mockDevices: LightDevice[] = [
+        { id: 'light-1', name: 'Ruang Tamu', isConnected: false, isOn: false },
+        { id: 'light-2', name: 'Kamar Tidur', isConnected: false, isOn: false },
+        { id: 'light-3', name: 'Dapur', isConnected: false, isOn: false },
+      ];
+      setLightDevices(mockDevices);
+    };
+
+    fetchDevices();
+  }, []);
+
+  // Connect to a specific light device
+  const connectToDevice = (deviceId: string) => {
+    setIsConnecting(true);
+    
+    // Simulate API connection to the device
+    setTimeout(() => {
+      setLightDevices(prevDevices => 
+        prevDevices.map(device => 
+          device.id === deviceId 
+            ? { ...device, isConnected: true } 
+            : device
+        )
+      );
+      setSelectedDevice(deviceId);
+      setIsConnecting(false);
+      
+      const deviceName = lightDevices.find(d => d.id === deviceId)?.name;
+      toast({
+        title: `Terhubung ke lampu ${deviceName}`,
+        description: 'Anda sekarang dapat mengontrol lampu ini',
+      });
+    }, 1500);
+  };
+
   const toggleLight = () => {
+    if (!selectedDevice) {
+      toast({
+        title: 'Pilih lampu terlebih dahulu',
+        description: 'Silahkan pilih lampu yang ingin dikontrol',
+      });
+      return;
+    }
+
     const newStatus = !isOn;
     setIsAnimating(true);
     
-    // Simulate a network request to turn on/off the light
+    // Simulate sending command to physical light
     setTimeout(() => {
       setIsOn(newStatus);
+      
+      // Update the light status in the devices list
+      setLightDevices(prevDevices => 
+        prevDevices.map(device => 
+          device.id === selectedDevice 
+            ? { ...device, isOn: newStatus } 
+            : device
+        )
+      );
+      
       setIsAnimating(false);
       
       toast({
@@ -34,9 +102,14 @@ const ControlLightPage: React.FC = () => {
     }
   }, []);
 
+  // Get the selected device info
+  const selectedDeviceInfo = selectedDevice 
+    ? lightDevices.find(d => d.id === selectedDevice) 
+    : null;
+
   return (
     <Layout title="Control light">
-      <div className="card p-4 rounded-lg mb-4">
+      <div className="card p-4 rounded-lg mb-4 bg-white shadow">
         <div className="text-center">
           <div className="bg-gray-100 rounded-full w-16 h-16 mx-auto flex items-center justify-center mb-2">
             {isOn ? (
@@ -51,6 +124,48 @@ const ControlLightPage: React.FC = () => {
 
       <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-xs text-yellow-700 mb-6">
         Ada lampu menyala, harap dapat segera dimatikan setelah selesai, untuk menghemat daya listrik
+      </div>
+
+      <div className="bg-white rounded-lg p-6 shadow mb-6">
+        <h2 className="text-lg font-medium mb-3">Perangkat Lampu Tersedia</h2>
+        <div className="space-y-4 mb-6">
+          {lightDevices.map((device) => (
+            <div 
+              key={device.id} 
+              className={`border p-3 rounded-md flex items-center justify-between cursor-pointer ${
+                selectedDevice === device.id ? 'border-blue-500 bg-blue-50' : ''
+              }`}
+              onClick={() => !device.isConnected && connectToDevice(device.id)}
+            >
+              <div>
+                <p className="font-medium">{device.name}</p>
+                <p className="text-xs text-gray-500">
+                  {device.isConnected 
+                    ? `Status: ${device.isOn ? 'Menyala' : 'Mati'}` 
+                    : 'Tidak terhubung'}
+                </p>
+              </div>
+              {device.isConnected ? (
+                <div className="h-3 w-3 rounded-full bg-green-500"></div>
+              ) : (
+                <Button 
+                  size="sm" 
+                  variant="outline"
+                  disabled={isConnecting}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    connectToDevice(device.id);
+                  }}
+                >
+                  {isConnecting && selectedDevice === device.id ? (
+                    <RefreshCcw className="h-4 w-4 animate-spin mr-1" />
+                  ) : null}
+                  Hubungkan
+                </Button>
+              )}
+            </div>
+          ))}
+        </div>
       </div>
 
       <div className="bg-black rounded-lg p-10 flex flex-col items-center justify-center mb-6 relative overflow-hidden">
@@ -81,15 +196,22 @@ const ControlLightPage: React.FC = () => {
             checked={isOn} 
             onCheckedChange={toggleLight} 
             className="data-[state=checked]:bg-yellow-400"
-            disabled={isAnimating}
+            disabled={isAnimating || !selectedDevice}
           />
         </div>
       </div>
       
       <div className="text-center text-sm text-gray-500 mt-8">
-        <p>Status: <span className={isOn ? "text-green-500 font-bold" : "text-red-500 font-bold"}>
-          {isOn ? "LAMPU MENYALA" : "LAMPU MATI"}
-        </span></p>
+        {selectedDeviceInfo ? (
+          <>
+            <p className="font-medium">{selectedDeviceInfo.name}</p>
+            <p>Status: <span className={isOn ? "text-green-500 font-bold" : "text-red-500 font-bold"}>
+              {isOn ? "LAMPU MENYALA" : "LAMPU MATI"}
+            </span></p>
+          </>
+        ) : (
+          <p>Pilih perangkat untuk mengontrol lampu</p>
+        )}
       </div>
     </Layout>
   );
