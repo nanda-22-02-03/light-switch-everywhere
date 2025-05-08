@@ -75,6 +75,10 @@
     @apply border-border;
   }
 
+  html, body, #root {
+    @apply h-full w-full overflow-x-hidden;
+  }
+
   body {
     @apply bg-background text-foreground;
     font-family: 'Poppins', sans-serif;
@@ -97,12 +101,23 @@
     background: rgba(255, 255, 255, 0.4);
     backdrop-filter: blur(10px);
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .card-icon:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
   }
 
   .cctv-card {
     border: 2px solid rgba(255, 255, 255, 0.5);
     background-color: rgba(255, 255, 255, 0.1);
     border-radius: 10px;
+    transition: transform 0.3s ease;
+  }
+
+  .cctv-card:hover {
+    transform: translateY(-5px);
   }
 
   .live-badge {
@@ -117,5 +132,33 @@
     background-color: rgba(255, 255, 255, 0.2);
     backdrop-filter: blur(10px);
     border-radius: 10px;
+    transition: all 0.3s ease;
+  }
+  
+  .notification-card:hover {
+    transform: scale(1.02);
+    background-color: rgba(255, 255, 255, 0.3);
+  }
+
+  .bg-grid-pattern {
+    background-image: linear-gradient(to right, rgba(166, 208, 255, 0.1) 1px, transparent 1px),
+                      linear-gradient(to bottom, rgba(166, 208, 255, 0.1) 1px, transparent 1px);
+    background-size: 20px 20px;
+  }
+
+  @keyframes float {
+    0% {
+      transform: translateY(0px);
+    }
+    50% {
+      transform: translateY(-10px);
+    }
+    100% {
+      transform: translateY(0px);
+    }
+  }
+
+  .floating-element {
+    animation: float 6s ease-in-out infinite;
   }
 }

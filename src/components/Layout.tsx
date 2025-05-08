@@ -11,7 +11,7 @@ interface LayoutProps {
 const Layout: React.FC<LayoutProps> = ({ children, title }) => {
   return (
     <ResponsiveContainer>
-      <div className="min-h-full bg-gradient-blue">
+      <div className="min-h-full relative z-10">
         <div className="container mx-auto px-4 pb-20">
           {title && (
             <div className="pt-8 pb-4 text-center">
