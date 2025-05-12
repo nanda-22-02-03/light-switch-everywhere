@@ -27,8 +27,8 @@ const ControlLightPage: React.FC = () => {
     const fetchDevices = () => {
       const mockDevices: LightDevice[] = [
         { id: 'light-1', name: 'Ruang Tamu', isConnected: false, isOn: false },
-        { id: 'light-2', name: 'Kamar Tidur', isConnected: false, isOn: false },
-        { id: 'light-3', name: 'Dapur', isConnected: false, isOn: false },
+       // { id: 'light-2', name: 'Kamar Tidur', isConnected: false, isOn: false },
+       // { id: 'light-3', name: 'Dapur', isConnected: false, isOn: false },
       ];
       setLightDevices(mockDevices);
     };
@@ -38,69 +38,91 @@ const ControlLightPage: React.FC = () => {
 
   // Connect to a specific light device
   const connectToDevice = (deviceId: string) => {
-    setIsConnecting(true);
+    const device = lightDevices.find((d) => d.id === deviceId);
     
-    // Simulate API connection to the device
+    // Jika sudah terkoneksi, cukup set sebagai device aktif
+    if (device?.isConnected) {
+      setSelectedDevice(deviceId);
+      toast({
+        title: `Beralih ke ${device.name}`,
+        description: 'Anda sekarang mengontrol lampu ini',
+      });
+      return;
+    }
+  
+    setIsConnecting(true);
+  
+    // Simulasi koneksi
     setTimeout(() => {
-      setLightDevices(prevDevices => 
-        prevDevices.map(device => 
-          device.id === deviceId 
-            ? { ...device, isConnected: true } 
+      setLightDevices((prevDevices) =>
+        prevDevices.map((device) =>
+          device.id === deviceId
+            ? { ...device, isConnected: true }
             : device
         )
       );
       setSelectedDevice(deviceId);
       setIsConnecting(false);
-      
-      const deviceName = lightDevices.find(d => d.id === deviceId)?.name;
+  
       toast({
-        title: `Terhubung ke lampu ${deviceName}`,
+        title: `Terhubung ke lampu ${device.name}`,
         description: 'Anda sekarang dapat mengontrol lampu ini',
       });
     }, 1500);
   };
+  
 
-  const toggleLight = () => {
-    if (!selectedDevice) {
-      toast({
-        title: 'Pilih lampu terlebih dahulu',
-        description: 'Silahkan pilih lampu yang ingin dikontrol',
-      });
-      return;
-    }
+  const toggleLight = async () => {
+  if (!selectedDevice) {
+    toast({
+      title: 'Pilih lampu terlebih dahulu',
+      description: 'Silahkan pilih lampu yang ingin dikontrol',
+    });
+    return;
+  }
 
-    const newStatus = !isOn;
-    setIsAnimating(true);
-    
-    // Simulate sending command to physical light
-    setTimeout(() => {
+  const newStatus = !isOn;
+  setIsAnimating(true);
+
+  try {
+    const response = await fetch(`https://blynk.cloud/external/api/update?token=LiS4GJmK9uA6tcpOr-dOtb388nT62udz&v0=${newStatus ? 0 : 1}`);
+    if (response.ok) {
       setIsOn(newStatus);
-      
-      // Update the light status in the devices list
-      setLightDevices(prevDevices => 
-        prevDevices.map(device => 
-          device.id === selectedDevice 
-            ? { ...device, isOn: newStatus } 
+      setLightDevices(prevDevices =>
+        prevDevices.map(device =>
+          device.id === selectedDevice
+            ? { ...device, isOn: newStatus }
             : device
         )
       );
-      
-      setIsAnimating(false);
-      
       toast({
         title: `Lampu telah ${newStatus ? 'dinyalakan' : 'dimatikan'}`,
         description: `Status lampu sekarang: ${newStatus ? 'ON' : 'OFF'}`,
       });
-    }, 500);
-  };
+    } else {
+      throw new Error('Gagal mengirim perintah ke Blynk');
+    }
+  } catch (error) {
+    toast({
+      title: 'Gagal mengubah status lampu',
+      description: String(error),
+    });
+  } finally {
+    setIsAnimating(false);
+  }
+};
+
 
   // Detect if the URL contains "on" parameter to automatically turn on the light
   useEffect(() => {
-    const url = new URL(window.location.href);
-    if (url.searchParams.get("on") !== null) {
-      setIsOn(true);
+    if (selectedDevice) {
+      const device = lightDevices.find((d) => d.id === selectedDevice);
+      if (device) {
+        setIsOn(device.isOn);
+      }
     }
-  }, []);
+  }, [selectedDevice, lightDevices]);
+  
 
   // Get the selected device info
   const selectedDeviceInfo = selectedDevice 
@@ -108,7 +130,7 @@ const ControlLightPage: React.FC = () => {
     : null;
 
   return (
-    <Layout title="Control light">
+    <Layout title="Control Light">
       <div className="card p-4 rounded-lg mb-4 bg-white shadow">
         <div className="text-center">
           <div className="bg-gray-100 rounded-full w-16 h-16 mx-auto flex items-center justify-center mb-2">
@@ -129,27 +151,27 @@ const ControlLightPage: React.FC = () => {
       <div className="bg-white rounded-lg p-6 shadow mb-6">
         <h2 className="text-lg font-medium mb-3">Perangkat Lampu Tersedia</h2>
         <div className="space-y-4 mb-6">
-          {lightDevices.map((device) => (
-            <div 
-              key={device.id} 
+        {lightDevices.map((device) => (
+            <div
+              key={device.id}
               className={`border p-3 rounded-md flex items-center justify-between cursor-pointer ${
                 selectedDevice === device.id ? 'border-blue-500 bg-blue-50' : ''
               }`}
-              onClick={() => !device.isConnected && connectToDevice(device.id)}
+              onClick={() => connectToDevice(device.id)}
             >
               <div>
                 <p className="font-medium">{device.name}</p>
                 <p className="text-xs text-gray-500">
-                  {device.isConnected 
-                    ? `Status: ${device.isOn ? 'Menyala' : 'Mati'}` 
+                  {device.isConnected
+                    ? `Status: ${device.isOn ? 'Menyala' : 'Mati'}`
                     : 'Tidak terhubung'}
                 </p>
               </div>
               {device.isConnected ? (
-                <div className="h-3 w-3 rounded-full bg-green-500"></div>
+                <div className="h-3 w-3 rounded-full bg-green-500" />
               ) : (
-                <Button 
-                  size="sm" 
+                <Button
+                  size="sm"
                   variant="outline"
                   disabled={isConnecting}
                   onClick={(e) => {
