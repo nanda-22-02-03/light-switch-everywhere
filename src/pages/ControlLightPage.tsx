@@ -27,8 +27,8 @@ const ControlLightPage: React.FC = () => {
     const fetchDevices = () => {
       const mockDevices: LightDevice[] = [
         { id: 'light-1', name: 'Ruang Tamu', isConnected: false, isOn: false },
-        { id: 'light-2', name: 'Kamar Tidur', isConnected: false, isOn: false },
-        { id: 'light-3', name: 'Dapur', isConnected: false, isOn: false },
+       // { id: 'light-2', name: 'Kamar Tidur', isConnected: false, isOn: false },
+       // { id: 'light-3', name: 'Dapur', isConnected: false, isOn: false },
       ];
       setLightDevices(mockDevices);
     };
@@ -72,39 +72,46 @@ const ControlLightPage: React.FC = () => {
   };
   
 
-  const toggleLight = () => {
-    if (!selectedDevice) {
-      toast({
-        title: 'Pilih lampu terlebih dahulu',
-        description: 'Silahkan pilih lampu yang ingin dikontrol',
-      });
-      return;
-    }
+  const toggleLight = async () => {
+  if (!selectedDevice) {
+    toast({
+      title: 'Pilih lampu terlebih dahulu',
+      description: 'Silahkan pilih lampu yang ingin dikontrol',
+    });
+    return;
+  }
 
-    const newStatus = !isOn;
-    setIsAnimating(true);
-    
-    // Simulate sending command to physical light
-    setTimeout(() => {
+  const newStatus = !isOn;
+  setIsAnimating(true);
+
+  try {
+    const response = await fetch(`https://blynk.cloud/external/api/update?token=LiS4GJmK9uA6tcpOr-dOtb388nT62udz&v0=${newStatus ? 0 : 1}`);
+    if (response.ok) {
       setIsOn(newStatus);
-      
-      // Update the light status in the devices list
-      setLightDevices(prevDevices => 
-        prevDevices.map(device => 
-          device.id === selectedDevice 
-            ? { ...device, isOn: newStatus } 
+      setLightDevices(prevDevices =>
+        prevDevices.map(device =>
+          device.id === selectedDevice
+            ? { ...device, isOn: newStatus }
             : device
         )
       );
-      
-      setIsAnimating(false);
-      
       toast({
         title: `Lampu telah ${newStatus ? 'dinyalakan' : 'dimatikan'}`,
         description: `Status lampu sekarang: ${newStatus ? 'ON' : 'OFF'}`,
       });
-    }, 500);
-  };
+    } else {
+      throw new Error('Gagal mengirim perintah ke Blynk');
+    }
+  } catch (error) {
+    toast({
+      title: 'Gagal mengubah status lampu',
+      description: String(error),
+    });
+  } finally {
+    setIsAnimating(false);
+  }
+};
+
 
   // Detect if the URL contains "on" parameter to automatically turn on the light
   useEffect(() => {
