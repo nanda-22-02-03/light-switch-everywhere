@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
 import { Card } from '@/components/ui/card';
@@ -31,21 +30,7 @@ const CCTVPage: React.FC = () => {
       id: "room-meeting",
       name: "Room Meeting",
       location: "Lantai 1",
-      isConnected: false,
-      image: officeRoom,
-    },
-    {
-      id: "office-room-1",
-      name: "Office room 1",
-      location: "Lantai 2",
-      isConnected: false,
-      image: officeRoom1,
-    },
-    {
-      id: "office-room-2",
-      name: "Office room 2",
-      location: "Lantai 3",
-      isConnected: false,
+      isConnected: true,
       image: officeRoom,
     },
   ];
