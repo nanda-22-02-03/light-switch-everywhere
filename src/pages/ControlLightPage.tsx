@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
 import { Lightbulb, LightbulbOff, RefreshCcw } from 'lucide-react';
@@ -27,8 +26,6 @@ const ControlLightPage: React.FC = () => {
     const fetchDevices = () => {
       const mockDevices: LightDevice[] = [
         { id: 'light-1', name: 'Ruang Tamu', isConnected: false, isOn: false },
-       // { id: 'light-2', name: 'Kamar Tidur', isConnected: false, isOn: false },
-       // { id: 'light-3', name: 'Dapur', isConnected: false, isOn: false },
       ];
       setLightDevices(mockDevices);
     };
@@ -71,7 +68,6 @@ const ControlLightPage: React.FC = () => {
     }, 1500);
   };
   
-
   const toggleLight = async () => {
   if (!selectedDevice) {
     toast({
@@ -112,7 +108,6 @@ const ControlLightPage: React.FC = () => {
   }
 };
 
-
   // Detect if the URL contains "on" parameter to automatically turn on the light
   useEffect(() => {
     if (selectedDevice) {
@@ -123,7 +118,6 @@ const ControlLightPage: React.FC = () => {
     }
   }, [selectedDevice, lightDevices]);
   
-
   // Get the selected device info
   const selectedDeviceInfo = selectedDevice 
     ? lightDevices.find(d => d.id === selectedDevice) 
@@ -142,10 +136,6 @@ const ControlLightPage: React.FC = () => {
           </div>
           <p className="text-sm">Control light</p>
         </div>
-      </div>
-
-      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-xs text-yellow-700 mb-6">
-        Ada lampu menyala, harap dapat segera dimatikan setelah selesai, untuk menghemat daya listrik
       </div>
 
       <div className="bg-white rounded-lg p-6 shadow mb-6">
